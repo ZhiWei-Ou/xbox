@@ -10,8 +10,7 @@ static inline xt_s32 xlog_prompt_default(xlog_logger self, xlog_message *message
     switch (message->level) {
     case XLOG_LEVEL_TRACE:
         return snprintf(buf, buf_size, XLOG_COLOR_TRACE"%s "XLOG_COLOR_RESET, "TRACE");
-    case XLOG_LEVEL_DEBUG:
-        return snprintf(buf, buf_size, XLOG_COLOR_DEBUG"%s "XLOG_COLOR_RESET, "DEBUG");
+    case XLOG_LEVEL_DEBUG: return snprintf(buf, buf_size, XLOG_COLOR_DEBUG"%s "XLOG_COLOR_RESET, "DEBUG");
     case XLOG_LEVEL_INFO:
         return snprintf(buf, buf_size, XLOG_COLOR_INFO"%s "XLOG_COLOR_RESET, "INFO");
     case XLOG_LEVEL_WARN:
@@ -126,14 +125,36 @@ void xlog_print(xlog_message message, ...)
     }
 }
 
+xt_bool general_expect_log(xlog_sink self, xlog_level level)
+{
+    if (self->priv_level <= level) {
+        return XTRUE;
+    }
+
+    return XFALSE;
+}
+
 
 xlog_sink xlog_sink_create(const char *sink_name,
                             xlog_level lvl,
-                            expect_log expect,
                             log log,
                             flush flush,
                             destroy destroy)
 {
+    return xlog_sink_custom_create(sink_name, lvl, general_expect_log, log, flush, destroy, NULL);
+}
+
+xlog_sink xlog_sink_custom_create(const char *sink_name,
+                            xlog_level lvl,
+                            expect_log expect,
+                            log log,
+                            flush flush,
+                            destroy destroy,
+                            void *ctx)
+{
+    if (!sink_name || !log || !flush || !destroy /*|| !expect*/) {
+        return NULL;
+    }
     xlog_sink self = (xlog_sink) xt_malloc(sizeof(struct xlog_sink_t));
     if (!self) {
         return NULL;
@@ -141,15 +162,17 @@ xlog_sink xlog_sink_create(const char *sink_name,
 
     self->priv_name = sink_name;
     self->priv_level = lvl;
-    self->priv_expect_log = expect;
+    if (expect) self->priv_expect_log = expect;
+    else self->priv_expect_log = general_expect_log;
     self->priv_log = log;
     self->priv_flush = flush;
     self->priv_destroy = destroy;
 
-    self->priv_ctx = NULL;
+    self->priv_ctx = ctx;
 
     return self;
 }
+
 void xlog_sink_set_context(xlog_sink self, void *ctx)
 {
     self->priv_ctx = ctx;
@@ -166,7 +189,21 @@ void xlog_sink_destroy(xlog_sink self)
     xt_free(self);
     self = NULL;
 }
+xlog_sink xlog_sink_get_by_name(xt_cstring name)
+{
+    if (!name) {
+        return NULL;
+    }
 
+    xlog_logger ins = get_instance();
+    for (int i = 0; i < ins->priv_sink_count; ++i) {
+        xlog_sink s = ins->priv_sink[i];
+        if (s->priv_name && !strcmp((const char *)name, s->priv_name)) {
+            return s;
+        }
+    }
+    return NULL;
+}
 
 
 void xlog_print_all_sink(int (*print)(const char *fmt, ...))

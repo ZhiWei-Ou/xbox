@@ -74,13 +74,20 @@ struct xlog_sink_t{
 };
 xlog_sink xlog_sink_create(const char *sink_name,
                             xlog_level lvl,
-                            expect_log expect,
                             log log,
                             flush flush,
                             destroy destroy);
+xlog_sink xlog_sink_custom_create(const char *sink_name,
+                            xlog_level lvl,
+                            expect_log expect,
+                            log log,
+                            flush flush,
+                            destroy destroy,
+                            void *ctx);
 void xlog_sink_set_context(xlog_sink self, void *ctx);
 void xlog_sink_set_level(xlog_sink self, xlog_level lvl);
 void xlog_sink_destroy(xlog_sink self);
+xlog_sink xlog_sink_get_by_name(xt_cstring name);
 
 struct xlog_logger_t {
     xt_u8 priv_sink_count;
@@ -106,14 +113,22 @@ void xlog_set_prompt(xlog_prompt prompt);
 /**
  * Define Sinker Type
  */
-xlog_sink xlog_sink_console_st();
-xlog_sink xlog_sink_console_mt();
-xlog_sink xlog_sink_file_st(xt_cstring path);
-xlog_sink xlog_sink_file_mt(xt_cstring path);
-xlog_sink xlog_sink_rotating_file_st(xt_cstring path, xt_u32 max_size, xt_u32 max_count);
-xlog_sink xlog_sink_rotating_file_mt(xt_cstring path, xt_u32 max_size, xt_u32 max_count);
-xlog_sink xlog_sink_remote_st(xt_cstring url);
-xlog_sink xlog_sink_remote_mt(xt_cstring url);
+#define XLOG_SINK_CONSOLE_ST_NAME "ConsoleSingleThread"
+xlog_sink xlog_sink_console_st(xlog_level level);
+#define XLOG_SINK_CONSOLE_MT_NAME "ConsoleMultiThread"
+xlog_sink xlog_sink_console_mt(xlog_level level);
+#define XLOG_SINK_FILE_ST_NAME "FileSingleThread"
+xlog_sink xlog_sink_file_st(xlog_level level, xt_cstring path);
+#define XLOG_SINK_FILE_MT_NAME "FileMultiThread"
+xlog_sink xlog_sink_file_mt(xlog_level level, xt_cstring path);
+#define XLOG_SINK_ROTATING_FILE_ST_NAME "RotatingFileSingleThread"
+xlog_sink xlog_sink_rotating_file_st(xlog_level level, xt_cstring path, xt_u32 max_size, xt_u32 max_count);
+#define XLOG_SINK_ROTATING_FILE_MT_NAME "RotatingFileMultiThread"
+xlog_sink xlog_sink_rotating_file_mt(xlog_level level, xt_cstring path, xt_u32 max_size, xt_u32 max_count);
+#define XLOG_SINK_REMOTE_ST_NAME "RemoteSingleThread"
+xlog_sink xlog_sink_remote_st(xlog_level level, xt_cstring url);
+#define XLOG_SINK_REMOTE_MT_NAME "RemoteMultiThread"
+xlog_sink xlog_sink_remote_mt(xlog_level level, xt_cstring url);
 
 
 /**
