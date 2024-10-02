@@ -2,7 +2,7 @@
 Pure C library. Develop cross platform as much as possible.
 
 # Process
-Doing...
+Work In Progress...
 
 # Tool useage document
 | module | document|
