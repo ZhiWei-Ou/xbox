@@ -38,6 +38,8 @@ extern "C" {
 #define XLOG_COLOR_WARN "\033[33m"
 #define XLOG_COLOR_ERROR "\033[31m"
 #define XLOG_COLOR_FATAL "\033[35m"
+
+#define XLOG_COLOR_GRAY "\033[90m"
 #define XLOG_COLOR_RESET "\033[0m"
 
 #define XLOG_LOGGER_MAX_SINKS 10
@@ -117,18 +119,26 @@ void xlog_set_prompt(xlog_prompt prompt);
 xlog_sink xlog_sink_console_st(xlog_level level);
 #define XLOG_SINK_CONSOLE_MT_NAME "ConsoleMultiThread"
 xlog_sink xlog_sink_console_mt(xlog_level level);
+
 #define XLOG_SINK_FILE_ST_NAME "FileSingleThread"
 xlog_sink xlog_sink_file_st(xlog_level level, xt_cstring path);
 #define XLOG_SINK_FILE_MT_NAME "FileMultiThread"
 xlog_sink xlog_sink_file_mt(xlog_level level, xt_cstring path);
+
 #define XLOG_SINK_ROTATING_FILE_ST_NAME "RotatingFileSingleThread"
 xlog_sink xlog_sink_rotating_file_st(xlog_level level, xt_cstring path, xt_u32 max_size, xt_u32 max_count);
 #define XLOG_SINK_ROTATING_FILE_MT_NAME "RotatingFileMultiThread"
 xlog_sink xlog_sink_rotating_file_mt(xlog_level level, xt_cstring path, xt_u32 max_size, xt_u32 max_count);
-#define XLOG_SINK_REMOTE_ST_NAME "RemoteSingleThread"
-xlog_sink xlog_sink_remote_st(xlog_level level, xt_cstring url);
-#define XLOG_SINK_REMOTE_MT_NAME "RemoteMultiThread"
-xlog_sink xlog_sink_remote_mt(xlog_level level, xt_cstring url);
+
+#define XLOG_SINK_UDP_ST_NAME "UdpSingleThread"
+xlog_sink xlog_sink_udp_st(xlog_level level, xt_cstring url);
+#define XLOG_SINK_UDP_MT_NAME "UdpMultiThread"
+xlog_sink xlog_sink_udp_mt(xlog_level level, xt_cstring url);
+
+#define XLOG_SINK_TCP_ST_NAME "TcpSingleThread"
+xlog_sink xlog_sink_tcp_st(xlog_level level, xt_cstring url);
+#define XLOG_SINK_TCP_MT_NAME "TcpMultiThread"
+xlog_sink xlog_sink_tcp_mt(xlog_level level, xt_cstring url);
 
 
 /**

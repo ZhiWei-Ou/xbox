@@ -62,6 +62,7 @@ typedef long xtimestamp;
 
 #define XTIME_LEGIBLE_MAX_LEN 64
 xt_string xtime_now_legible(xtime_fmt fmt);
+xt_string xtime_now_static_legible(xtime_fmt fmt, xt_string buf, xt_u8 buf_size);
 xtimestamp xtime_now(xtime_unit unit);
 xt_string xtime_timestamp_to_string(xtimestamp ts, xt_string buf, xt_u8 buf_size);
 xtimestamp xtime_sub(xtimestamp ago, xtimestamp now);

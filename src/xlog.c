@@ -1,36 +1,96 @@
 #include "xlog.h"
 #include "xdef.h"
 #include "xmutex.h"
+#include "xtime.h"
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
 
+static const xt_cstring xlog_level_string[] = {
+    [XLOG_LEVEL_TRACE] = "TRACE",
+    [XLOG_LEVEL_DEBUG] = "DEBUG",
+    [XLOG_LEVEL_INFO] = "INFO",
+    [XLOG_LEVEL_WARN] = "WARN",
+    [XLOG_LEVEL_ERROR] = "ERROR",
+    [XLOG_LEVEL_FATAL] = "FATAL",
+};
+
+// 02 Oct 24 01:24 CST INFO
 static inline xt_s32 xlog_prompt_default(xlog_logger self, xlog_message *message, xt_string buf, xt_s32 buf_size)
 {
+    (void) self;
+    xt_s32 len = 0;
+    xt_string tm = NULL;
+    tm = xtime_now_legible(XTIME_RFC822);
+
     switch (message->level) {
     case XLOG_LEVEL_TRACE:
-        return snprintf(buf, buf_size, XLOG_COLOR_TRACE"%s "XLOG_COLOR_RESET, "TRACE");
-    case XLOG_LEVEL_DEBUG: return snprintf(buf, buf_size, XLOG_COLOR_DEBUG"%s "XLOG_COLOR_RESET, "DEBUG");
+        len = snprintf(buf,
+                buf_size,
+                "%s%s%s %s%s%s ",
+                XLOG_COLOR_GRAY,tm, XLOG_COLOR_RESET,
+                XLOG_COLOR_TRACE,xlog_level_string[XLOG_LEVEL_TRACE],XLOG_COLOR_RESET);
+        break;
+    case XLOG_LEVEL_DEBUG:
+        len = snprintf(buf,
+                buf_size,
+                "%s%s%s %s%s%s ",
+                XLOG_COLOR_GRAY,tm, XLOG_COLOR_RESET,
+                XLOG_COLOR_DEBUG,xlog_level_string[XLOG_LEVEL_DEBUG],XLOG_COLOR_RESET);
+        break;
     case XLOG_LEVEL_INFO:
-        return snprintf(buf, buf_size, XLOG_COLOR_INFO"%s "XLOG_COLOR_RESET, "INFO");
+        len = snprintf(buf,
+                buf_size,
+                "%s%s%s %s%s%s ",
+                XLOG_COLOR_GRAY,tm, XLOG_COLOR_RESET,
+                XLOG_COLOR_INFO,xlog_level_string[XLOG_LEVEL_INFO],XLOG_COLOR_RESET);
+        break;
     case XLOG_LEVEL_WARN:
-        return snprintf(buf, buf_size, XLOG_COLOR_WARN"%s "XLOG_COLOR_RESET, "WARN");
+        len = snprintf(buf,
+                buf_size,
+                "%s%s%s %s%s%s ",
+                XLOG_COLOR_GRAY,tm, XLOG_COLOR_RESET,
+                XLOG_COLOR_WARN,xlog_level_string[XLOG_LEVEL_WARN],XLOG_COLOR_RESET);
+        break;
     case XLOG_LEVEL_ERROR:
-        return snprintf(buf, buf_size, XLOG_COLOR_ERROR"%s "XLOG_COLOR_RESET, "ERROR");
+        len = snprintf(buf,
+                buf_size,
+                "%s%s%s %s%s%s ",
+                XLOG_COLOR_GRAY,tm, XLOG_COLOR_RESET,
+                XLOG_COLOR_ERROR,xlog_level_string[XLOG_LEVEL_ERROR],XLOG_COLOR_RESET);
+        break;
     case XLOG_LEVEL_FATAL:
-        return snprintf(buf, buf_size, XLOG_COLOR_FATAL"%s "XLOG_COLOR_RESET, "FATAL");
-
+        len = snprintf(buf,
+                buf_size,
+                "%s%s%s %s%s%s ",
+                XLOG_COLOR_GRAY,tm, XLOG_COLOR_RESET,
+                XLOG_COLOR_FATAL,xlog_level_string[XLOG_LEVEL_FATAL],XLOG_COLOR_RESET);
+        break;
     case XLOG_LEVEL_MAX:
     default:
-        return 0;
+        len = 0;
+        memset(buf, 0, buf_size);
     }
+
+    if (tm) xt_free(tm);
+    return len;
 }
 
 static xmutex instance_mutex = NULL;
 static xlog_prompt instance_prompt = xlog_prompt_default;
 static xt_u8 instance_log_prompt_buffer[XLOG_PROMPT_MAX_SIZE] = {0};
 static xt_u8 instance_log_buffer[XLOG_BUFFER_MAX_SIZE] = {0};
-struct xlog_logger_t instance_logger = {0};
+
+extern struct xlog_sink_t xlog_default_console_sinker;
+#define XLOG_DEFAULT_LOGGER_INIT \
+{ \
+    1, \
+    { \
+        [0] = &xlog_default_console_sinker, \
+    } \
+}
+
+struct xlog_logger_t instance_logger = XLOG_DEFAULT_LOGGER_INIT;
 
 static inline xt_u8 *get_log_buffer(void)
 {
@@ -67,12 +127,15 @@ void xlog_set_prompt(xlog_prompt prompt)
 
 xlog_logger xlog_init(const int count, ...)
 {
+    xlog_logger ins = get_instance();
+    ins->priv_sink_count = 0;
+
     va_list sinks;
     va_start(sinks, count);
     for (int i = 0; i < count && i < XLOG_LOGGER_MAX_SINKS; ++i) {
         xlog_sink s = va_arg(sinks, xlog_sink);
         if (s) {
-            get_instance()->priv_sink[ get_instance()->priv_sink_count++ ] = s;
+            ins->priv_sink[ ins->priv_sink_count++ ] = s;
         }
     }
     va_end(sinks);
@@ -210,8 +273,9 @@ void xlog_print_all_sink(int (*print)(const char *fmt, ...))
 {
     xlog_logger ins = get_instance();
 
+    print("XLogger Sinks:\n");
     for (int i = 0; i < ins->priv_sink_count; ++i) {
         xlog_sink s = ins->priv_sink[i];
-        print("#%d sink[%p]: %s\n", i, s, s->priv_name);
+        print("\t#%d sink[%p]: %s\n", i, s, s->priv_name);
     }
 }

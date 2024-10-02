@@ -8,6 +8,7 @@
 /*typedef void (*log)(xlog_sink self, xt_cstring output_message);*/
 /*typedef void (*flush)(xlog_sink self);*/
 /*typedef void (*destroy)(xlog_sink self);*/
+extern xt_bool general_expect_log(xlog_sink self, xlog_level level);
 
 void xlog_sink_console_st_log(xlog_sink self, xt_cstring output_message)
 {
@@ -24,6 +25,15 @@ void xlog_sink_console_st_destroy(xlog_sink self)
 
 }
 
+struct xlog_sink_t xlog_default_console_sinker = {
+    "ConsoleSinker",
+    NULL,
+    XLOG_LEVEL_INFO,
+    general_expect_log,
+    xlog_sink_console_st_log,
+    xlog_sink_console_st_flush,
+    xlog_sink_console_st_destroy
+};
 xlog_sink xlog_sink_console_st(xlog_level level)
 {
     return xlog_sink_create(XLOG_SINK_CONSOLE_ST_NAME,

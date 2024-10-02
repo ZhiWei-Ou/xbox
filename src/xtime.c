@@ -55,6 +55,19 @@ xt_string xtime_now_legible(xtime_fmt fmt)
     return out;
 }
 
+xt_string xtime_now_static_legible(xtime_fmt fmt, xt_string buf, xt_u8 buf_size)
+{
+    time_t rawtime;
+    struct tm *timeinfo;
+
+    time(&rawtime);
+    timeinfo = localtime(&rawtime);
+
+    strftime(buf, buf_size, xtime_format_table[fmt], timeinfo);
+
+    return buf;
+}
+
 xtimestamp xtime_now(xtime_unit unit)
 {
     struct timespec ts;

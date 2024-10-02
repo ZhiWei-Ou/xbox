@@ -2,6 +2,11 @@
 #include <stdio.h>
 
 int main() {
+    XLOG_INFO("Hello Welcom xlog_test");
+    XLOG_INFOF("Current Use Default Logger[%s]", "ConsoleSinker");
+    xlog_print_all_sink(printf);
+    XLOG_WARN("Next Step [call xlog_init] Will Use User Options Loggers");
+
     xlog_init(2,
             xlog_sink_console_st(XLOG_LEVEL_INFO),
             xlog_sink_file_st(XLOG_LEVEL_TRACE,"xlog_test.log"));
