@@ -82,7 +82,7 @@ void test_udp_log() {
 void test_tcp_log() {
     xlog_init(2,
             xlog_sink_console_st(XLOG_LEVEL_INFO),
-            xlog_sink_tcp_st(XLOG_LEVEL_INFO, "127.0.0.1", 8080));
+            xlog_sink_tcp_st(XLOG_LEVEL_INFO, "127.0.0.1", 12224));
     xlog_print_all_sink(printf);
 
     for (int i = 0; i < 10; ++i) {

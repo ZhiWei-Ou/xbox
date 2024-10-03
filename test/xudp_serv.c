@@ -4,7 +4,8 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <errno.h>
-#include <strings.h>
+#include <string.h>
+#include <signal.h>
 #include "xdef.h"
 
 #define SERVER_PORT 12223

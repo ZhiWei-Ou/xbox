@@ -3,9 +3,11 @@
 #include <string.h>
 #include <unistd.h>
 #include <arpa/inet.h>
+#include <signal.h>
 #include "xdef.h"
 
-#define PORT 8080
+#define PORT 12224
+#define HOST "127.0.0.1"
 #define BUFFER_SIZE 1024
 
 static xt_bool is_exit = XFALSE;
@@ -29,7 +31,7 @@ int main() {
     }
 
     address.sin_family = AF_INET;
-    address.sin_addr.s_addr = INADDR_ANY;
+    address.sin_addr.s_addr = inet_addr(HOST);;
     address.sin_port = htons(PORT);
 
     if (bind(server_fd, (struct sockaddr *)&address, sizeof(address)) < 0) {
@@ -46,12 +48,9 @@ int main() {
 
     printf("Server is listening on port %d\n", PORT);
 
-    struct timeval timeout;
-    timeout.tv_sec = 5;
-    timeout.tv_usec = 0;
-    setsockopt(server_fd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
-
-    if ((new_socket = accept(server_fd, (struct sockaddr *)&address, (socklen_t*)&addrlen)) < 0) {
+    struct sockaddr_in clnt_addr;
+    socklen_t clnt_addr_size = sizeof(clnt_addr);
+    if ((new_socket = accept(server_fd, (struct sockaddr *)&clnt_addr, (socklen_t*)&clnt_addr_size)) < 0) {
         perror("Accept failed");
         close(server_fd);
         exit(EXIT_FAILURE);
@@ -59,8 +58,9 @@ int main() {
 
     printf("Client connected\n");
 
-    while (is_exit) {
-        int valread = read(new_socket, buffer, BUFFER_SIZE);
+    while (!is_exit) {
+        int valread = recv(new_socket, buffer, BUFFER_SIZE, 0);
+        /*int valread = read(new_socket, buffer, BUFFER_SIZE);*/
         if (valread > 0) {
             printf("Received: %s\n", buffer);
             memset(buffer, 0, BUFFER_SIZE);

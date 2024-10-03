@@ -33,7 +33,7 @@ void xmutex_fini(xmutex self);
 
 xmutex get_null_mutex(void);
 
-#if defined(__APPLE__) || defined(_POSIX_VERSION)
+#if defined(__APPLE__) || defined(_POSIX_VERSION) || defined(__linux__)
 #include <pthread.h>
 #include <stdlib.h>
 static inline void *platform_mutex_create()
