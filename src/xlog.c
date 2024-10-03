@@ -279,3 +279,4 @@ void xlog_print_all_sink(int (*print)(const char *fmt, ...))
         print("\t#%d sink[%p]: %s\n", i, s, s->priv_name);
     }
 }
+

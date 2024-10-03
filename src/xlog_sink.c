@@ -4,6 +4,11 @@
 #include <stdlib.h>
 #include <string.h>
 
+// socket
+#include <sys/socket.h>
+#include <arpa/inet.h>
+#include <unistd.h>
+
 /*typedef xt_bool (*expect_log)(xlog_sink self, xlog_level level);*/
 /*typedef void (*log)(xlog_sink self, xt_cstring output_message);*/
 /*typedef void (*flush)(xlog_sink self);*/
@@ -109,10 +114,61 @@ xlog_sink xlog_sink_file_st(xlog_level level, xt_cstring path)
                                     ctx);
 }
 
-/*xlog_sink xlog_sink_console_mt();*/
-/*xlog_sink xlog_sink_file_st(xt_cstring path);*/
-/*xlog_sink xlog_sink_file_mt(xt_cstring path);*/
-/*xlog_sink xlog_sink_rotating_file_st(xt_cstring path, xt_u32 max_size, xt_u32 max_count);*/
-/*xlog_sink xlog_sink_rotating_file_mt(xt_cstring path, xt_u32 max_size, xt_u32 max_count);*/
-/*xlog_sink xlog_sink_remote_st(xt_cstring url);*/
-/*xlog_sink xlog_sink_remote_mt(xt_cstring url);*/
+typedef struct {
+    int priv_sockfd;
+    struct sockaddr_in priv_addr;
+} xlog_sink_udp_t;
+
+void xlog_sink_udp_st_log(xlog_sink self, xt_cstring output_message)
+{
+    xlog_sink_udp_t *ctx = self->priv_ctx;
+
+    sendto(ctx->priv_sockfd,
+            output_message,
+            strlen(output_message),
+            0,
+            (struct sockaddr *)&ctx->priv_addr, sizeof(ctx->priv_addr));
+}
+
+void xlog_sink_udp_st_flush(xlog_sink self)
+{
+    (void) self;
+}
+
+void xlog_sink_udp_st_destroy(xlog_sink self)
+{
+    xlog_sink_udp_t *ctx = self->priv_ctx;
+    if (!ctx) {
+        return;
+    }
+
+    close(ctx->priv_sockfd);
+    xt_free(ctx);
+    self->priv_ctx = NULL;
+}
+
+xlog_sink xlog_sink_udp_st(xlog_level level, xt_cstring host, xt_u16 port)
+{
+    xlog_sink_udp_t *ctx = (xlog_sink_udp_t *) xt_malloc(sizeof(xlog_sink_udp_t));
+    if (!ctx) {
+        return NULL;
+    }
+    
+    if ((ctx->priv_sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
+        perror("socket creation failed");
+        exit(EXIT_FAILURE);
+    }
+
+    memset(&ctx->priv_addr, 0, sizeof(ctx->priv_addr));
+    ctx->priv_addr.sin_family = AF_INET;
+    ctx->priv_addr.sin_port = htons(port);
+    ctx->priv_addr.sin_addr.s_addr = inet_addr(host);
+
+    return xlog_sink_custom_create(XLOG_SINK_UDP_ST_NAME,
+                                    level,
+                                    NULL,
+                                    xlog_sink_udp_st_log,
+                                    xlog_sink_udp_st_flush,
+                                    xlog_sink_udp_st_destroy,
+                                    ctx);
+}

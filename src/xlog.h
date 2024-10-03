@@ -131,7 +131,7 @@ xlog_sink xlog_sink_rotating_file_st(xlog_level level, xt_cstring path, xt_u32 m
 xlog_sink xlog_sink_rotating_file_mt(xlog_level level, xt_cstring path, xt_u32 max_size, xt_u32 max_count);
 
 #define XLOG_SINK_UDP_ST_NAME "UdpSingleThread"
-xlog_sink xlog_sink_udp_st(xlog_level level, xt_cstring url);
+xlog_sink xlog_sink_udp_st(xlog_level level, xt_cstring url, xt_u16 port);
 #define XLOG_SINK_UDP_MT_NAME "UdpMultiThread"
 xlog_sink xlog_sink_udp_mt(xlog_level level, xt_cstring url);
 

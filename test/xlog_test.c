@@ -1,6 +1,7 @@
 #include "xlog.h"
 #include "xtime.h"
 #include <stdio.h>
+#include <unistd.h>
 
 void test_xlog_init() {
     XLOG_INFO("Hello Welcom xlog_test");
@@ -65,13 +66,29 @@ void bench_3(xtimestamp *cost) {
     *cost = end - start;
 }
 
+void test_udp_log() {
+
+    xlog_init(2,
+            xlog_sink_console_st(XLOG_LEVEL_INFO),
+            xlog_sink_udp_st(XLOG_LEVEL_INFO, "127.0.0.1", 12223));
+    xlog_print_all_sink(printf);
+
+    for (int i = 0; i < 10; ++i) {
+        XLOG_INFOF("#%d Hello", i);
+        sleep(1);
+    }
+}
+
 int main() {
-    xtimestamp bench_1_cost, bench_3_cost;
+    /*xtimestamp bench_1_cost, bench_3_cost;*/
+    /**/
+    /*bench_1(&bench_1_cost);*/
+    /**/
+    /*bench_3(&bench_3_cost);*/
+    /**/
+    /*printf("bench_1_cost: %ldms\n", bench_1_cost);*/
+    /*printf("bench_3_cost: %ldms\n", bench_3_cost);*/
 
-    bench_1(&bench_1_cost);
-
-    bench_3(&bench_3_cost);
-
-    printf("bench_1_cost: %ldms\n", bench_1_cost);
-    printf("bench_3_cost: %ldms\n", bench_3_cost);
+    test_udp_log();
+    return 0;
 }
