@@ -1,7 +1,8 @@
 #include "xlog.h"
+#include "xtime.h"
 #include <stdio.h>
 
-int main() {
+void test_xlog_init() {
     XLOG_INFO("Hello Welcom xlog_test");
     XLOG_INFOF("Current Use Default Logger[%s]", "ConsoleSinker");
     xlog_print_all_sink(printf);
@@ -21,6 +22,56 @@ int main() {
     XLOG_INFOF("I'm %s", "INFOF");
     XLOG_WARNF("I'm %s", "WARNF");
     XLOG_ERRORF("I'm %s", "ERRORF");
+}
 
-    return 0;
+/*
+ * benchmark
+ * 100000 entries
+ *
+ * - SingleThread
+ *  1. ConsoleSinker
+ *  2. FileSinker
+ *  3. Console && File
+ * - MultiThread
+ */
+#define BENCH_NUM 100000
+
+void bench_1(xtimestamp *cost) {
+    xtimestamp start = xtime_now(XTIME_Millisecond);
+
+    for (int i = 0; i < BENCH_NUM; ++i) {
+        XLOG_INFOF("#%d Hello World", i);
+    }
+
+    xtimestamp end = xtime_now(XTIME_Millisecond);
+
+    *cost = end - start;
+}
+
+void bench_3(xtimestamp *cost) {
+
+    xlog_init(2,
+            xlog_sink_console_st(XLOG_LEVEL_INFO),
+            xlog_sink_file_st(XLOG_LEVEL_TRACE,"xlog_test.log"));
+    xlog_print_all_sink(printf);
+
+    xtimestamp start = xtime_now(XTIME_Millisecond);
+    for (int i = 0; i < BENCH_NUM; ++i) {
+        XLOG_INFOF("#%d Hello World", i);
+    }
+
+    xtimestamp end = xtime_now(XTIME_Millisecond);
+
+    *cost = end - start;
+}
+
+int main() {
+    xtimestamp bench_1_cost, bench_3_cost;
+
+    bench_1(&bench_1_cost);
+
+    bench_3(&bench_3_cost);
+
+    printf("bench_1_cost: %ldms\n", bench_1_cost);
+    printf("bench_3_cost: %ldms\n", bench_3_cost);
 }

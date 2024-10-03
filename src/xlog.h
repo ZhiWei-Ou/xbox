@@ -44,7 +44,7 @@ extern "C" {
 
 #define XLOG_LOGGER_MAX_SINKS 10
 #define XLOG_PROMPT_MAX_SIZE 128
-#define XLOG_BUFFER_MAX_SIZE 1024
+#define XLOG_BUFFER_MAX_SIZE 1024 * 1024
 
 typedef enum {
     XLOG_LEVEL_TRACE = 0,
