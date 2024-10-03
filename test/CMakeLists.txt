@@ -1,14 +1,14 @@
 
 enable_testing()
 
-add_executable(
-    xlog_test
-    xlog_test.c
-)
-target_link_libraries(xlog_test PRIVATE xbox::xbox)
+aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR} TEST_LIST)
+foreach(test ${TEST_LIST})
+    get_filename_component(test_name ${test} NAME_WE)
 
-add_executable(
-    xtime_test
-    xtime_test.c
-)
-target_link_libraries(xtime_test PRIVATE xbox::xbox)
+    add_executable(
+        ${test_name}
+        ${test}
+    )
+    target_link_libraries(${test_name} PRIVATE xbox::xbox)
+
+endforeach()

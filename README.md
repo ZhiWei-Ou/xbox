@@ -10,5 +10,6 @@ Work In Progress...
 |Log| [Log](./docs/xlog.md)|
 |Time| [Time](./docs/xtime.md)|
 |Mutex| [Mutex](./docs/xmutex.md)|
+|Vector| [Vector](./docs/xvector.md)|
 
 

@@ -13,6 +13,7 @@ extern "C" {
 #endif
 
 #include <stddef.h>
+#include <stdlib.h>
 
 typedef int xt_err;
 #define XOK 0
@@ -41,6 +42,7 @@ typedef const char *xt_cstring;
 #define XMIN(x, y) ((x) < (y) ? (x) : (y))
 
 #define xt_malloc(s) malloc(s)
+#define xt_realloc(p, s) realloc(p, s)
 #define xt_free(p) free(p)
 
 #ifdef __cplusplus
