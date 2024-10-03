@@ -156,7 +156,8 @@ xlog_sink xlog_sink_udp_st(xlog_level level, xt_cstring host, xt_u16 port)
     
     if ((ctx->priv_sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
         perror("socket creation failed");
-        exit(EXIT_FAILURE);
+        xt_free(ctx);
+        return NULL;
     }
 
     memset(&ctx->priv_addr, 0, sizeof(ctx->priv_addr));
@@ -165,6 +166,73 @@ xlog_sink xlog_sink_udp_st(xlog_level level, xt_cstring host, xt_u16 port)
     ctx->priv_addr.sin_addr.s_addr = inet_addr(host);
 
     return xlog_sink_custom_create(XLOG_SINK_UDP_ST_NAME,
+                                    level,
+                                    NULL,
+                                    xlog_sink_udp_st_log,
+                                    xlog_sink_udp_st_flush,
+                                    xlog_sink_udp_st_destroy,
+                                    ctx);
+}
+
+typedef struct {
+    int priv_sockfd;
+    struct sockaddr_in priv_addr;
+} xlog_sink_tcp_t;
+
+void xlog_sink_tcp_st_log(xlog_sink self, xt_cstring output_message)
+{
+    xlog_sink_udp_t *ctx = self->priv_ctx;
+
+    send(ctx->priv_sockfd, output_message, strlen(output_message), 0);
+}
+
+void xlog_sink_tcp_st_flush(xlog_sink self)
+{
+    (void) self;
+}
+
+void xlog_sink_tcp_st_destroy(xlog_sink self)
+{
+    xlog_sink_tcp_t *ctx = self->priv_ctx;
+    if (!ctx) {
+        return;
+    }
+
+    close(ctx->priv_sockfd);
+    xt_free(ctx);
+    self->priv_ctx = NULL;
+}
+
+xlog_sink xlog_sink_tcp_st(xlog_level level, xt_cstring ip, xt_u16 port)
+{
+    xlog_sink_tcp_t *ctx = (xlog_sink_tcp_t *) xt_malloc(sizeof(xlog_sink_tcp_t));
+    if (!ctx) {
+        return NULL;
+    }
+    
+    if ((ctx->priv_sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
+        printf("-- [Log] socket creation failed\n");
+        xt_free(ctx);
+        return NULL;
+    }
+
+    memset(&ctx->priv_addr, 0, sizeof(ctx->priv_addr));
+    ctx->priv_addr.sin_family = AF_INET;
+    ctx->priv_addr.sin_port = htons(port);
+
+    if (inet_pton(AF_INET, ip, &ctx->priv_addr) <= 0) {
+        printf("\n-- [Log] Invalid address/ Address not supported \n");
+        xt_free(ctx);
+        return NULL;
+    }
+
+    if (connect(ctx->priv_sockfd, (struct sockaddr *)&ctx->priv_addr, sizeof(ctx->priv_addr)) < 0) {
+        printf("\n-- [Log] Connection Failed \n");
+        xt_free(ctx);
+        return NULL;
+    }
+
+    return xlog_sink_custom_create(XLOG_SINK_TCP_ST_NAME,
                                     level,
                                     NULL,
                                     xlog_sink_udp_st_log,
